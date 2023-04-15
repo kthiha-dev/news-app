@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 networks:
   laravel:
@@ -23,10 +23,7 @@ services:
       - php
       - redis
       - mysql
-      - laravel-queue
       - laravel-cron
-      - phpmyadmin
-      - mailhog
     networks:
       - laravel
 
@@ -48,7 +45,7 @@ services:
       - laravel
 
   mysql:
-    image: mariadb:10.6
+    image: mysql:8.0
     container_name: mysql
     restart: unless-stopped
     tty: true
@@ -56,16 +53,17 @@ services:
       - 3307:3306
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
+      #MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      #MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
       - ./docker/mysql:/var/lib/mysql
     networks:
       - laravel
-    
+
   redis:
     image: redis:alpine
     container_name: redis
@@ -90,7 +88,7 @@ services:
     depends_on:
       - mysql
     working_dir: /var/www/html
-    entrypoint: ['php', '/var/www/html/artisan', 'schedule:work']
+    entrypoint: ["php", "/var/www/html/artisan", "schedule:work"]
     networks:
       - laravel
 
@@ -109,34 +107,7 @@ services:
     depends_on:
       - mysql
     working_dir: /var/www/html
-    entrypoint: ['php', '/var/www/html/artisan', 'queue:work']
-    networks:
-      - laravel
-
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
-    logging: 
-      driver: 'none'
-    ports:
-      - 1025:1025
-      - 8025:8025
-    networks:
-      - laravel
-
-  phpmyadmin:
-    image: phpmyadmin:5.2.0
-    container_name: phpmyadmin
-    environment:
-      PMA_ARBITRARY: 1
-      PMA_HOST: ${DB_HOST}
-      PMA_USER: ${DB_USERNAME}
-      PMA_PASSWORD: ${DB_PASSWORD}
-      PMA_PORT: ${DB_PORT}
-    depends_on:
-      - mysql
-    ports:
-      - 8888:80
+    entrypoint: ["php", "/var/www/html/artisan", "queue:work"]
     networks:
       - laravel
 
@@ -156,11 +127,11 @@ services:
       - mysql
     profiles: ["migrate-seed"]
     working_dir: /var/www/html
-    entrypoint: ["/bin/sh","-c"]
+    entrypoint: ["/bin/sh", "-c"]
     command:
-    - |
-      php artisan migrate
-      php artisan db:seed
+      - |
+        php artisan migrate
+        php artisan db:seed
     networks:
       - laravel
 
@@ -181,7 +152,7 @@ services:
       - php
     user: ${USER:-laravel} #system user
     profiles: ["composer"]
-    entrypoint: ['composer', '--ignore-platform-reqs']
+    entrypoint: ["composer", "--ignore-platform-reqs"]
     networks:
       - laravel
 
@@ -201,7 +172,7 @@ services:
       - mysql
     working_dir: /var/www/html
     profiles: ["artisan"]
-    entrypoint: ['php', '/var/www/html/artisan']
+    entrypoint: ["php", "/var/www/html/artisan"]
     networks:
       - laravel
 
@@ -216,7 +187,6 @@ services:
       - 3001:3001
     working_dir: /var/www/html
     profiles: ["npm"]
-    entrypoint: ['npm']
+    entrypoint: ["npm"]
     networks:
       - laravel
-
