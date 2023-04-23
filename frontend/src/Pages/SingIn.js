@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Avatar,
   Button,
@@ -11,19 +11,61 @@ import {
   Typography,
 } from "@mui/material";
 import Copyright from "./Components/Copyright";
-
 import Contents from "./Components/Contents";
+import { isValidEmail } from "../helpers/Helper";
+import axios from "axios";
+import { Redirect } from "react-router-dom";
 
 export default function SignIn() {
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [emailErrorMsg, setEmailErrorMsg] = useState("");
+  const [passwordErrorMsg, setPasswordErrorMsg] = useState("");
+  const [remember, setRemember] = useState(0);
+  const [redirect, setRedirect] = useState(false);
+
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
-  };
+    const email = data.get("email");
+    const password = data.get("password");
 
+    const isEmailValid = email !== "" && isValidEmail(email);
+    const emailErrorMsg = isEmailValid ? "" : "Invalid Email Address";
+    setEmailError(!isEmailValid);
+    setEmailErrorMsg(emailErrorMsg);
+
+    const passwordErrorMsg = password === "" ? "Password is required" : "";
+    setPasswordError(password === "");
+    setPasswordErrorMsg(passwordErrorMsg);
+
+    if (!isEmailValid || password === "") {
+      return;
+    }
+    axios
+      .post(`${process.env.REACT_APP_API_BASE_URL}/login`, {
+        email,
+        password,
+        remember,
+      })
+      .then((res) => {
+        if (res?.status === 200) {
+          localStorage.setItem("isLoggedIn", true);
+          setRedirect(true);
+        }
+      })
+      .catch((err) => {
+        setLoginError("Invalid login user credential");
+      });
+  };
+  if (redirect) {
+    return <Redirect to="/" />;
+  }
+  const login = localStorage.getItem("isLoggedIn");
+  if (login) {
+    return <Redirect to="/" />;
+  }
   return (
     <Contents>
       <Box
@@ -48,6 +90,8 @@ export default function SignIn() {
             name="email"
             autoComplete="email"
             autoFocus
+            error={emailError}
+            helperText={emailErrorMsg}
           />
           <TextField
             margin="normal"
@@ -58,9 +102,18 @@ export default function SignIn() {
             type="password"
             id="password"
             autoComplete="current-password"
+            error={passwordError}
+            helperText={passwordErrorMsg}
           />
           <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
+            control={
+              <Checkbox
+                value={remember}
+                color="primary"
+                name="remember"
+                onChange={() => setRemember(!remember)}
+              />
+            }
             label="Remember me"
           />
           <Button
@@ -72,11 +125,20 @@ export default function SignIn() {
             Sign In
           </Button>
           <Grid container>
-            <Grid item xs>
+            {/* <Grid item xs>
               <Link href="#" variant="body2">
                 Forgot password?
               </Link>
-            </Grid>
+            </Grid> */}
+            {loginError && (
+              <Grid item xs>
+                <Box>
+                  <Typography variant="caption" color="error">
+                    {loginError}
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
             <Grid item>
               <Link href="sign-up" variant="body2">
                 {"Don't have an account? Sign Up"}

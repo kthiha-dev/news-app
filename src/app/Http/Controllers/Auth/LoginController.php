@@ -5,38 +5,40 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class LoginController extends Controller
 {
-    public function create() {
-        return inertia('Auth/Login');
+
+  public function store(Request $request)
+  {
+    $request->validate([
+      'email' => ['required'],
+      'password' => ['required'],
+    ]);
+
+    if (Auth::attempt($request->only('email', 'password'), $request->remember)) {
+      session()->regenerate();
+      return response([
+        'type' => 'success',
+        'message' => 'You are logged in.',
+      ], Response::HTTP_OK);
     }
 
-    public function store(Request $request) {
-        $request->validate([
-            'email' => ['required'],
-            'password' => ['required'],
-        ]);
+    return response([
+      'type' => 'error',
+      'message' => 'The provide credentials does not match our record.',
+    ], Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        if(Auth::attempt($request->only('email', 'password'), $request->remember)) {
-            session()->regenerate();
-            return redirect('/dashboard')->with([
-                'type' => 'success',
-                'message' => 'You are logged in.'
-            ]);
-        }
+  }
 
-        throw ValidationException::withMessages([
-            'email' => 'The provide credentials does not match our record.',
-        ]);
-    }
+  public function destroy()
+  {
+    Auth::logout();
 
-    public function destroy() {
-        Auth::logout();
-
-        return redirect('/login')->with([
-            'type' => 'success', 'message' => 'You are now logout.',
-        ]);
-    }
+    return response([
+      'type' => 'success',
+      'message' => 'You are now logout.',
+    ], Response::HTTP_OK);
+  }
 }

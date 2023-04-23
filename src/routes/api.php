@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,3 +22,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('get_app_data', [ApplicationController::class, 'getAppData']);
+Route::post('login', [LoginController::class, 'store']);
+Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
+Route::post('register', [RegisterController::class, 'store']);

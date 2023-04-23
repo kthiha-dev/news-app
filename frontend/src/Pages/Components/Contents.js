@@ -13,7 +13,6 @@ const Contents = ({ children }) => {
     <ThemeProvider theme={theme}>
       <NavMenu />
       <Container component="main" maxWidth="md">
-        <CssBaseline />
         {children}
       </Container>
     </ThemeProvider>
